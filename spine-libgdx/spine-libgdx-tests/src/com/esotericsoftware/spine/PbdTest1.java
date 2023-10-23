@@ -87,13 +87,13 @@ public class PbdTest1 extends ApplicationAdapter{
 
         // set up pbd framework
         double damping = 0.95;
-        double lbs_alpha = 1e-5;
+        double lbs_alpha = 5e-5;
         int solver_iterations = 6;
 
         deformMesh = new DeformMesh(meshData);
         sceneData = new PhysicsSceneData();
         // sceneData.setGravity(0, 0f);
-        sceneData.setGravity(0, -10f);
+        sceneData.setGravity(0, 0f);
         sceneData.setDamping(damping);
         sceneData.setFps(60, solver_iterations, 1);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
@@ -123,10 +123,8 @@ public class PbdTest1 extends ApplicationAdapter{
 
     @Override
     public void render() {
-        float t = (float) TimeUtils.timeSinceMillis(startTime) / 1000f;
 
-        if(t > 2.0f)
-            state.update(Gdx.graphics.getDeltaTime()); // Update the animation time.
+        state.update(Gdx.graphics.getDeltaTime()); // Update the animation time.
 
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 

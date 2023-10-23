@@ -90,13 +90,6 @@ public class LbsData {
             v_index += 1;
         }
 
-        // print weights
-        /* for(int i=0; i<n_bones;i++){
-            System.out.println(weightsCount[i] + " " + weightsStart[i]);
-            for(int j = weightsStart[i]; j<weightsStart[i]+weightsCount[i]; j++){
-                System.out.println("    " + weightsIndex[j] + " " + weights[j]);
-            }
-        } */
     }
 
     // update bone states
