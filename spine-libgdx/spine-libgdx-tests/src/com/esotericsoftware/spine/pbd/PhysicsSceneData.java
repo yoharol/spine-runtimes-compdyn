@@ -2,7 +2,7 @@ package com.esotericsoftware.spine.pbd;
 
 public class PhysicsSceneData {
     public Vec2 gravity = new Vec2(0, -10);
-    public double dt = 1.0f / (60 * 15);
+    public double dt = 1.0 / (60 * 15);
     public int iterations = 15;
     public int solver_steps = 1;
     public double damping = 1f;

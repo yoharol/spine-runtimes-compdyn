@@ -13,14 +13,14 @@ public class DeformConstraint extends BaseConstraint {
     double dt;
 
 
-    public DeformConstraint(DeformMesh deformMesh, PhysicsSceneData physicsSceneData, double hydro_alpha, double devia_alpha){
+    public DeformConstraint(DeformMesh deformMesh, PhysicsSceneData physicsSceneData, double hydro_alpha, double devia_alpha) {
         this.deformMesh = deformMesh;
         n_faces = deformMesh.n_faces;
         hydroLambda = new double[n_faces];
         deviaLambda = new double[n_faces];
-        this.hydro_alpha = hydro_alpha;
-        this.devia_alpha = devia_alpha;
         dt = physicsSceneData.dt;
+        this.hydro_alpha = hydro_alpha / (dt * dt);
+        this.devia_alpha = devia_alpha / (dt * dt);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class DeformConstraint extends BaseConstraint {
             par_ch_x2.add(par_ch_x1);
             par_ch_x2.mul(-1f);
             double sum_par_ch =  par_ch_x0.norm_sqr() * w0 + par_ch_x1.norm_sqr() * w1 + par_ch_x2.norm_sqr() * w2;
-            double alpha_tilde_h = hydro_alpha / (dt * dt * deformMesh.faceMass[k]);
+            double alpha_tilde_h = hydro_alpha / (deformMesh.faceMass[k]);
 
             double c_d = F.ddot(F) - 2f;
             Mat2x2 par_cd = new Mat2x2(F);
@@ -76,22 +76,7 @@ public class DeformConstraint extends BaseConstraint {
             par_cd_x2.add(par_cd_x1);
             par_cd_x2.mul(-1f);
             double sum_par_cd = par_cd_x0.norm_sqr() * w0 + par_cd_x1.norm_sqr() * w1 + par_cd_x2.norm_sqr() * w2;
-            double alpha_tilde_d = devia_alpha / (dt * dt * deformMesh.faceMass[k]);
-
-            /*System.out.println("D" + new Mat2x2(v1, v2));
-            System.out.println("B" + B);
-            System.out.println("F" + F);
-            System.out.println("C_H" + c_h);
-            System.out.println("F det diff" + F.detDiff());
-            System.out.println("par_ch" + par_ch);
-            System.out.println(par_ch_x0);
-            System.out.println(par_ch_x1);
-            System.out.println(par_ch_x2);
-            System.out.println("C_D" + c_d);
-            System.out.println("par_cd" + par_cd);
-            System.out.println(par_cd_x0);
-            System.out.println(par_cd_x1);
-            System.out.println(par_cd_x2);*/
+            double alpha_tilde_d = devia_alpha / (deformMesh.faceMass[k]);
 
             double sum_par_cdh = par_cd_x0.dot(par_ch_x0) * w0 + par_cd_x1.dot(par_ch_x1) * w1 + par_cd_x2.dot(par_ch_x2) * w2;
             double delta_lambda_h = (sum_par_cdh *

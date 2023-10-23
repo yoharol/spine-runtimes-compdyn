@@ -46,4 +46,12 @@ public class DeformMesh {
         }
     }
 
+    public double[] getVertices(){
+        return vertices;
+    }
+
+    public double[] getRefVertices(){
+        return ref_vertices;
+    }
+
 }

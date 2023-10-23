@@ -9,11 +9,13 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.esotericsoftware.spine.attachments.MeshAttachment;
 import com.esotericsoftware.spine.pbd.*;
 import com.esotericsoftware.spine.utils.TwoColorPolygonBatch;
 
 public class PbdTest1 extends ApplicationAdapter{
+    long startTime;
 
     // gdx and spine stuff
     OrthographicCamera camera;
@@ -84,22 +86,35 @@ public class PbdTest1 extends ApplicationAdapter{
         lbsData = new LbsData(meshData, bones, vertices, boneObjs, n_verts);
 
         // set up pbd framework
+        double damping = 0.95;
+        double lbs_alpha = 1e-5;
+        int solver_iterations = 6;
+
         deformMesh = new DeformMesh(meshData);
         sceneData = new PhysicsSceneData();
-        sceneData.setGravity(0, -100f);
+        // sceneData.setGravity(0, 0f);
+        sceneData.setGravity(0, -10f);
+        sceneData.setDamping(damping);
+        sceneData.setFps(60, solver_iterations, 1);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
-        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-8f, 1e-8f));
+
+        // set up constraints
+        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-2), 0);
+        pbdFramework.addConstraint(new LbsConstraint(deformMesh, lbsData, sceneData, lbs_alpha), 1);
         pbdFramework.initConstraints();
 
-        // lbsData = new LbsData(bones, boneObjs);
+        startTime = TimeUtils.millis();
+
     }
 
     void PhysicsUpdate(){
+        lbsData.updateLbsVerts(meshAttachment, slot, meshData.getScale());
         for(int i=0; i< sceneData.iterations; i++) {
             pbdFramework.makePrediction();
             pbdFramework.preUpdateProject();
             for(int k=0; k< sceneData.solver_steps; k++){
-                pbdFramework.project();
+                pbdFramework.project(0);
+                pbdFramework.project(1);
             }
             pbdFramework.collisionY(0);
             pbdFramework.updateVelocity();
@@ -108,14 +123,17 @@ public class PbdTest1 extends ApplicationAdapter{
 
     @Override
     public void render() {
-        PhysicsUpdate();
+        float t = (float) TimeUtils.timeSinceMillis(startTime) / 1000f;
 
-        state.update(Gdx.graphics.getDeltaTime()); // Update the animation time.
+        if(t > 2.0f)
+            state.update(Gdx.graphics.getDeltaTime()); // Update the animation time.
 
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         state.apply(skeleton); // Poses skeleton using current animations. This sets the bones' local SRT.
         skeleton.updateWorldTransform(); // Uses the bones' local SRT to compute their world SRT.
+
+        PhysicsUpdate();
 
         // Configure the camera, SpriteBatch, and SkeletonRendererDebug.
         camera.update();
@@ -139,17 +157,20 @@ public class PbdTest1 extends ApplicationAdapter{
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         short[] indices = meshData.getIndices();
-        double[] vertices = meshData.getVertices();
+        double[] vertices = deformMesh.getVertices();
+        // double[] vertices = deformMesh.getRefVertices();
+        // double[] vertices = lbsData.getRigVerts();
+        double scale = meshData.getScale();
         for (int i=0; i<indices.length / 3; i++){
             short i1 = indices[i*3];
             short i2 = indices[i*3+1];
             short i3 = indices[i*3+2];
-            float x1 = (float)vertices[i1*2];
-            float y1 = (float)vertices[i1*2+1];
-            float x2 = (float)vertices[i2*2];
-            float y2 = (float)vertices[i2*2+1];
-            float x3 = (float)vertices[i3*2];
-            float y3 = (float)vertices[i3*2+1];
+            float x1 = (float)(vertices[i1*2]*scale);
+            float y1 = (float)(vertices[i1*2+1]*scale);
+            float x2 = (float)(vertices[i2*2]*scale);
+            float y2 = (float)(vertices[i2*2+1]*scale);
+            float x3 = (float)(vertices[i3*2]*scale);
+            float y3 = (float)(vertices[i3*2+1]*scale);
             shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
         }
         shapeRenderer.end();
