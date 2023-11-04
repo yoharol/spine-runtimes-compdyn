@@ -11,6 +11,22 @@ public class Mat2x2 {
         m[1][1] = d;
     }
 
+    public double a(){
+        return m[0][0];
+    }
+
+    public double b(){
+        return m[0][1];
+    }
+
+    public double c(){
+        return m[1][0];
+    }
+
+    public double d(){
+        return m[1][1];
+    }
+
     public Mat2x2(Mat2x2 _m){
         m[0][0] = _m.m[0][0];
         m[0][1] = _m.m[0][1];
@@ -69,6 +85,13 @@ public class Mat2x2 {
 
     public void set(int i, int j, double v){
         m[i][j] = v;
+    }
+
+    public void set(double a, double b, double c, double d){
+        m[0][0] = a;
+        m[0][1] = b;
+        m[1][0] = c;
+        m[1][1] = d;
     }
 
     public void set(Mat2x2 _m){
@@ -162,6 +185,41 @@ public class Mat2x2 {
     @Override
     public String toString(){
         return m[0][0] + " " + m[0][1] + "\n" + m[1][0] + " " + m[1][1] + "\n";
+    }
+
+    // fast svd decomposition of 2x2 matrix
+    // https://ieeexplore.ieee.org/document/486688
+    public Mat2x2[] polarDecomposition(){
+        Mat2x2[] RS = new Mat2x2[2];
+        double a = m[0][0];
+        double b = m[0][1];
+        double c = m[1][0];
+        double d = m[1][1];
+        double e = (a+d)/2;
+        double f = (a-d)/2;
+        double h = (b-c)/2;
+        double g = (b+c)/2;
+        double q = Math.sqrt(e*e+h*h);
+        double r = Math.sqrt(f*f+g*g);
+        double w1 = q+r;
+        double w2 = q-r;
+        double t1 = Math.atan2(g, f);
+        double t2 = Math.atan2(h, e);
+        double gamma = (t2+t1)/2;
+        double beta = (t2-t1)/2;
+        // svd decomposition
+        Mat2x2 U = new Mat2x2(Math.cos(beta), Math.sin(beta), -Math.sin(beta), Math.cos(beta));
+        Mat2x2 V = new Mat2x2(Math.cos(gamma), Math.sin(gamma), -Math.sin(gamma), Math.cos(gamma));
+        Mat2x2 S = new Mat2x2(w1, 0, 0, w2);
+        // rotation part of polar decomposition
+        RS[0] = new Mat2x2(U);
+        RS[0].dot(V);
+        // symmetric part of polar decomposition
+        RS[1] = new Mat2x2(V);
+        RS[1].set(V.transpose());
+        RS[1].dot(S);
+        RS[1].dot(V);
+        return RS;
     }
 
 

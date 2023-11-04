@@ -1,15 +1,12 @@
 package com.esotericsoftware.spine.pbd;
 
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.IntArray;
 import com.esotericsoftware.spine.Bone;
 import com.esotericsoftware.spine.Slot;
 import com.esotericsoftware.spine.attachments.MeshAttachment;
 
-import java.util.ArrayList;
-
 public class LbsData {
-    MeshData meshData;
+    DeformMesh deformMesh;
     MeshAttachment meshAttachment;
 
     int n_verts;
@@ -24,25 +21,25 @@ public class LbsData {
     Bone[] boneObjs;
 
     Mat2x2[] boneMats;
-    Vec2[] bonePos;
+    Vec2[] bonePos_ref;
     double[] rigVertices;
     float[] rigVerticesFloats;
 
-    public LbsData(MeshData meshData, int[] bones, double[] vertices, Array<Bone> boneObjs, int vertexCount){
+    public LbsData(DeformMesh deformMesh, int[] bones, double[] vertices, Array<Bone> boneObjs, int vertexCount){
 
         n_verts = vertexCount;
         n_bones = boneObjs.size;
         rigVertices = new double[n_verts * 2];
         rigVerticesFloats = new float[n_verts * 2];
 
-        this.meshData = meshData;
+        this.deformMesh = deformMesh;
         this.boneObjs = new Bone[boneObjs.size];
         for(int i=0; i<boneObjs.size; i++){
             this.boneObjs[i] = boneObjs.get(i);
         }
         int n_bones = boneObjs.size;
         boneMats = new Mat2x2[boneObjs.size];
-        bonePos = new Vec2[boneObjs.size];
+        bonePos_ref = new Vec2[boneObjs.size];
         updateBoneStates();
 
         for(int i=0; i<boneObjs.size; i++){
@@ -97,7 +94,8 @@ public class LbsData {
         for(int i=0; i<boneObjs.length; i++){
             Bone bone = boneObjs[i];
             boneMats[i] = new Mat2x2(bone.getA(), bone.getB(), bone.getC(), bone.getD());
-            bonePos[i] = new Vec2(bone.getWorldX(), bone.getWorldY());
+            bonePos_ref[i] = new Vec2(bone.getWorldX(), bone.getWorldY());
+            bonePos_ref[i].div(deformMesh.getScale());
         }
     }
 
@@ -108,8 +106,49 @@ public class LbsData {
         }
     }
 
+    public Bone getBone(int i){
+        return boneObjs[i];
+    }
+
     public double[] getRigVerts(){
         return rigVertices;
     }
 
+    public Mat2x2 inverseMixed(int j, double blend){
+        Mat2x2 P = new Mat2x2(0.0, 0.0, 0.0, 0.0);
+        Mat2x2 Q = new Mat2x2(0.0, 0.0, 0.0, 0.0);
+        int startidx = weightsStart[j];
+        int endidx = startidx + weightsCount[j];
+        for(int idx = startidx; idx < endidx; idx++){
+            int i = weightsIndex[idx];
+            double w = weights[idx];
+            double x_bone = boneObjs[j].getWorldX() / deformMesh.getScale();
+            double y_bone = boneObjs[j].getWorldY() / deformMesh.getScale();
+            double x_bone_ref = bonePos_ref[j].x();
+            double y_bone_ref = bonePos_ref[j].y();
+            double x_ref = deformMesh.ref_vertices[i*2] - x_bone_ref;
+            double y_ref = deformMesh.ref_vertices[i*2+1] - y_bone_ref;
+            double x = deformMesh.vertices[i*2] - x_bone;
+            double y = deformMesh.vertices[i*2+1] - y_bone;
+            Mat2x2 D = new Mat2x2(x*x_ref, x*y_ref, y*x_ref, y*y_ref);
+            D.mul(w*deformMesh.vertMass[i]);
+            P.add(D);
+            Mat2x2 B = new Mat2x2(x_ref*x_ref, x_ref*y_ref, y_ref*x_ref, y_ref*y_ref);
+            B.mul(w*deformMesh.vertMass[i]);
+            Q.add(B);
+        }
+        Q.inverse();
+        P.dot(Q);
+        Mat2x2[] RS = P.polarDecomposition();
+        Q.set(RS[0]);
+        Q.mul(blend);
+        P.mul(1-blend);
+        P.add(Q);
+        P.dot(boneMats[j]);
+        return P;
+    }
+
+    public int getN_bones(){
+        return n_bones;
+    }
 }

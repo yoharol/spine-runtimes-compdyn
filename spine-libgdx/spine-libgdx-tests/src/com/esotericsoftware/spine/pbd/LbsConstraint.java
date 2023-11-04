@@ -1,8 +1,6 @@
 package com.esotericsoftware.spine.pbd;
 
-import com.esotericsoftware.spine.attachments.MeshAttachment;
-
-public class LbsConstraint extends  BaseConstraint{
+public class LbsConstraint extends BaseConstraint{
 
     int n_bones;
 

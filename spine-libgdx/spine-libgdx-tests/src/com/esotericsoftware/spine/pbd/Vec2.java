@@ -69,6 +69,16 @@ public class Vec2 {
         v[1] /= s;
     }
 
+    public void add_mul(Vec2 v, double s){
+        this.v[0] += v.v[0] * s;
+        this.v[1] += v.v[1] * s;
+    }
+
+    public void add_mul(double x, double y, double s){
+        this.v[0] += x * s;
+        this.v[1] += y * s;
+    }
+
     public double dot(Vec2 _v){
         return v[0] * _v.x() + v[1] * _v.y();
     }

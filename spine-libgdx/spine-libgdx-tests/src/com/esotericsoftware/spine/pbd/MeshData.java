@@ -6,6 +6,7 @@ public class MeshData {
     int n_faces;
 
     double[] vertices;
+    double[] ref_vertices;
     short[] indices;
 
     double scale;
@@ -30,10 +31,16 @@ public class MeshData {
         for(int i=0; i<n_verts*2;i++){
             vertices[i] /= scale;
         }
+        ref_vertices = new double[vertices.length];
+        System.arraycopy(vertices, 0, ref_vertices, 0, vertices.length);
     }
 
     public double[] getVertices(){
         return vertices;
+    }
+
+    public double[] getRefVertices(){
+        return ref_vertices;
     }
 
     public short[] getIndices(){

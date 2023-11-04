@@ -10,6 +10,7 @@ public class DeformMesh {
     short[] indices;
     double[] faceMass;
     double[] vertMass;
+    double scale;
 
     Mat2x2[] invB;
 
@@ -18,8 +19,7 @@ public class DeformMesh {
         n_faces = data.getFaceNum();
         vertices = data.getVertices();
         indices = data.getIndices();
-        ref_vertices = new double[vertices.length];
-        System.arraycopy(vertices, 0, ref_vertices, 0, vertices.length);
+        ref_vertices = data.getRefVertices();
         faceMass = new double[n_faces];
         vertMass = new double[n_verts];
         invB = new Mat2x2[n_faces];
@@ -27,6 +27,7 @@ public class DeformMesh {
             invB[i] = new Mat2x2(1, 0, 0, 1);
         }
         setMeshData();
+        scale = data.getScale();
     }
 
     public void setMeshData(){
@@ -53,5 +54,6 @@ public class DeformMesh {
     public double[] getRefVertices(){
         return ref_vertices;
     }
+    public double getScale(){return scale;}
 
 }
