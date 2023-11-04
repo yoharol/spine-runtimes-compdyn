@@ -86,7 +86,7 @@ public class PbdTest2 extends ApplicationAdapter{
         meshData = new MeshData(worldVertices, indices);
 
         // set up pbd framework
-        double damping = 0.96;
+        double damping = 0.98;
         int solver_iterations = 6;
 
         deformMesh = new DeformMesh(meshData);
@@ -115,20 +115,12 @@ public class PbdTest2 extends ApplicationAdapter{
             for(int j=2; j<max_bones; j++){
                 Bone b = lbsData.getBone(j);
                 b.updateWorldTransform();
-                Mat2x2 A = lbsData.inverseMixed(j, 0.0);
+                Mat2x2 A = lbsData.inverseMixed(j, 1.0);
                 b.setA((float)A.a());
                 b.setB((float)A.b());
                 b.setC((float)A.c());
                 b.setD((float)A.d());
                 b.updateAppliedTransform();
-                /*Array<Bone> cb = b.getChildren();
-                for (int k=0; k<cb.size; k++){
-                    Bone child = cb.get(k);
-                    child.updateWorldTransform();
-                }*/
-                // for(int k = j+1; k < max_bones; k++){
-                //     lbsData.getBone(k).updateWorldTransform();
-                // }
             }
 
             pbdFramework.updateVelocity();
@@ -138,7 +130,7 @@ public class PbdTest2 extends ApplicationAdapter{
     @Override
     public void render() {
 
-        state.update(Gdx.graphics.getDeltaTime()*1.3f); // Update the animation time.
+        state.update(Gdx.graphics.getDeltaTime()); // Update the animation time.
 
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -167,7 +159,7 @@ public class PbdTest2 extends ApplicationAdapter{
         // font.draw(spriteBatch, "1 2 3", 50, 50);
         spriteBatch.end();
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        /*shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         short[] indices = meshData.getIndices();
         double[] vertices = deformMesh.getVertices();
         // double[] vertices = deformMesh.getRefVertices();
@@ -185,7 +177,7 @@ public class PbdTest2 extends ApplicationAdapter{
             float y3 = (float)(vertices[i3*2+1]*scale);
             shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
         }
-        shapeRenderer.end();
+        shapeRenderer.end();*/
 
     }
 
