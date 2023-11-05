@@ -39,6 +39,12 @@ public class MeshData {
         return vertices;
     }
 
+    public void updateVertices(double[] verts){
+        for(int i=0; i<n_verts*2; i++){
+            vertices[i] = verts[i];
+        }
+    }
+
     public double[] getRefVertices(){
         return ref_vertices;
     }

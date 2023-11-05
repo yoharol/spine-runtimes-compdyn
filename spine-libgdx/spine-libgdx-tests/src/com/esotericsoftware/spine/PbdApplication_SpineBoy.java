@@ -1,4 +1,3 @@
-
 package com.esotericsoftware.spine;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -14,8 +13,7 @@ import com.esotericsoftware.spine.attachments.MeshAttachment;
 import com.esotericsoftware.spine.pbd.*;
 import com.esotericsoftware.spine.utils.TwoColorPolygonBatch;
 
-public class PbdTest2 extends ApplicationAdapter{
-    // gdx and spine stuff
+public class PbdApplication_SpineBoy extends ApplicationAdapter{
     OrthographicCamera camera;
     TwoColorPolygonBatch batch;
     SkeletonRenderer renderer;
@@ -39,6 +37,10 @@ public class PbdTest2 extends ApplicationAdapter{
     PbdFramework pbdFramework;
     DeformConstraint deformConstraint;
     ShapeConstraint shapeConstraint;
+    LbsConstraint lbsConstraint;
+
+    int[] freeBones;
+    int[] fixedBones;
 
     @Override
     public void create (){
@@ -50,24 +52,24 @@ public class PbdTest2 extends ApplicationAdapter{
         debugRenderer.setBoundingBoxes(true);
         debugRenderer.setRegionAttachments(true);
 
-        atlas = new TextureAtlas(Gdx.files.internal("fishNbones/fish.atlas"));
+        atlas = new TextureAtlas(Gdx.files.internal("spineboy/spineboy-pma.atlas"));
         SkeletonJson json = new SkeletonJson(atlas);
-        json.setScale(0.15f);
-        SkeletonData skeletonData = json.readSkeletonData(Gdx.files.internal("fishNbones/fish.json"));
+        json.setScale(0.6f);
+        SkeletonData skeletonData = json.readSkeletonData(Gdx.files.internal("spineboy/spineboy-pro.json"));
         skeleton = new Skeleton(skeletonData);
-        skeleton.setPosition(250, 250);
+        skeleton.setPosition(250, 0);
 
         AnimationStateData stateData = new AnimationStateData(skeletonData); // Defines mixing (crossfading) between animations.
-        stateData.setMix("swing", "swing", 0f);
+        stateData.setMix("run", "run", 0f);
         state = new AnimationState(stateData);
-        state.setAnimation(0, "swing", true);
-        state.setTimeScale(1.5f); // Slow all animations down to 50% speed.
+        state.setAnimation(0, "run", true);
+        state.setTimeScale(0.7f); // Slow all animations down to 50% speed.
 
         spriteBatch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
 
-        slot = skeleton.findSlot("fish");
-        meshAttachment = (MeshAttachment) skeleton.getAttachment("fish", "fish");
+        slot = skeleton.findSlot("head");
+        meshAttachment = (MeshAttachment) skeleton.getAttachment("head", "head");
         skeleton.setBonesToSetupPose();
         skeleton.updateWorldTransform();
 
@@ -84,21 +86,35 @@ public class PbdTest2 extends ApplicationAdapter{
         meshData = new MeshData(worldVertices, indices);
 
         // set up pbd framework
-        double damping = 0.987;
+        double damping = 0.98;
         int solver_iterations = 6;
 
         deformMesh = new DeformMesh(meshData);
         lbsData = new LbsData(deformMesh, bones, vertices, boneObjs, n_verts);
         sceneData = new PhysicsSceneData();
         // sceneData.setGravity(0, 0f);
-        sceneData.setGravity(0, -1f);
+        sceneData.setGravity(0, 0f);
         sceneData.setDamping(damping);
         sceneData.setFps(60, solver_iterations, 1);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
 
+
+        // set up free and fixed bones
+        freeBones = new int[]{47, 48, 49, 50};
+        fixedBones = lbsData.getFixedBones(freeBones);
+
+
         // set up constraints
-        deformConstraint = new DeformConstraint(deformMesh, sceneData, 1e-4, 1e-4);
-        shapeConstraint = new ShapeConstraint(deformMesh, lbsData);
+        deformConstraint = new DeformConstraint(deformMesh, sceneData, 1e-3, 8e-3);
+        lbsConstraint = new LbsConstraint(deformMesh, lbsData, sceneData, 1e-4);
+
+        // update world vertices to the first frame of animation
+        state.update(0);
+        state.apply(skeleton);
+        skeleton.updateWorldTransform();
+        lbsData.updateLbsVerts(meshAttachment, slot, meshData.getScale());
+        meshData.updateVertices(lbsData.getRigVerts());
+
     }
 
     void PhysicsUpdate(){
@@ -107,20 +123,24 @@ public class PbdTest2 extends ApplicationAdapter{
             pbdFramework.makePrediction();
             deformConstraint.preUpdateProject();
             deformConstraint.project();
-            shapeConstraint.project_single_bone(1);
+            lbsConstraint.preUpdateProject();
+            for(int jdx = 0; jdx < fixedBones.length; jdx++){
+                lbsConstraint.projectSingleConstraint(fixedBones[jdx]);
+            }
 
-            int max_bones = lbsData.getN_bones();
-            for(int j=2; j<max_bones; j++){
+            for(int j=0; j< lbsData.getN_bones(); j++)
+            {
+                if(lbsData.getStartIndex(j) == lbsData.getEndIndex(j))
+                    continue;
                 Bone b = lbsData.getBone(j);
                 b.updateWorldTransform();
-                Mat2x2 A = lbsData.inverseMixed(j, 1.0);
+                Mat2x2 A = lbsData.inverseMixed(j, 0.0);
                 b.setA((float)A.a());
                 b.setB((float)A.b());
                 b.setC((float)A.c());
                 b.setD((float)A.d());
                 b.updateAppliedTransform();
             }
-
             pbdFramework.updateVelocity();
         }
     }
@@ -151,7 +171,7 @@ public class PbdTest2 extends ApplicationAdapter{
         // show the world rotation of the bone
 
         // render the background physics mesh
-        /*shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        /* shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         short[] indices = meshData.getIndices();
         double[] vertices = deformMesh.getVertices();
         // double[] vertices = deformMesh.getRefVertices();
@@ -183,7 +203,6 @@ public class PbdTest2 extends ApplicationAdapter{
     }
 
     public static void main (String[] args) throws Exception {
-        new Lwjgl3Application(new PbdTest2());
+        new Lwjgl3Application(new PbdApplication_SpineBoy());
     }
-
 }

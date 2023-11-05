@@ -1,4 +1,3 @@
-
 package com.esotericsoftware.spine;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -14,8 +13,7 @@ import com.esotericsoftware.spine.attachments.MeshAttachment;
 import com.esotericsoftware.spine.pbd.*;
 import com.esotericsoftware.spine.utils.TwoColorPolygonBatch;
 
-public class PbdTest2 extends ApplicationAdapter{
-    // gdx and spine stuff
+public class PbdApplication extends ApplicationAdapter{
     OrthographicCamera camera;
     TwoColorPolygonBatch batch;
     SkeletonRenderer renderer;
@@ -39,6 +37,10 @@ public class PbdTest2 extends ApplicationAdapter{
     PbdFramework pbdFramework;
     DeformConstraint deformConstraint;
     ShapeConstraint shapeConstraint;
+    LbsConstraint lbsConstraint;
+
+    int[] freeBones;
+    int[] fixedBones;
 
     @Override
     public void create (){
@@ -84,21 +86,27 @@ public class PbdTest2 extends ApplicationAdapter{
         meshData = new MeshData(worldVertices, indices);
 
         // set up pbd framework
-        double damping = 0.987;
+        double damping = 0.98;
         int solver_iterations = 6;
 
         deformMesh = new DeformMesh(meshData);
         lbsData = new LbsData(deformMesh, bones, vertices, boneObjs, n_verts);
         sceneData = new PhysicsSceneData();
         // sceneData.setGravity(0, 0f);
-        sceneData.setGravity(0, -1f);
+        sceneData.setGravity(0, 0f);
         sceneData.setDamping(damping);
         sceneData.setFps(60, solver_iterations, 1);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
 
+
+        // set up free and fixed bones
+        freeBones = new int[]{7, 8, 9, 11, 12, 13, 14, 15, 16};
+        fixedBones = lbsData.getFixedBones(freeBones);
+
+
         // set up constraints
-        deformConstraint = new DeformConstraint(deformMesh, sceneData, 1e-4, 1e-4);
-        shapeConstraint = new ShapeConstraint(deformMesh, lbsData);
+        deformConstraint = new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3);
+        lbsConstraint = new LbsConstraint(deformMesh, lbsData, sceneData, 1e-4);
     }
 
     void PhysicsUpdate(){
@@ -107,20 +115,22 @@ public class PbdTest2 extends ApplicationAdapter{
             pbdFramework.makePrediction();
             deformConstraint.preUpdateProject();
             deformConstraint.project();
-            shapeConstraint.project_single_bone(1);
+            lbsConstraint.preUpdateProject();
+            for(int jdx = 0; jdx < fixedBones.length; jdx++){
+                lbsConstraint.projectSingleConstraint(fixedBones[jdx]);
+            }
 
-            int max_bones = lbsData.getN_bones();
-            for(int j=2; j<max_bones; j++){
+            for(int j=1; j< lbsData.getN_bones(); j++)
+            {
                 Bone b = lbsData.getBone(j);
                 b.updateWorldTransform();
-                Mat2x2 A = lbsData.inverseMixed(j, 1.0);
+                Mat2x2 A = lbsData.inverseMixed(j, 0.0);
                 b.setA((float)A.a());
                 b.setB((float)A.b());
                 b.setC((float)A.c());
                 b.setD((float)A.d());
                 b.updateAppliedTransform();
             }
-
             pbdFramework.updateVelocity();
         }
     }
@@ -151,7 +161,7 @@ public class PbdTest2 extends ApplicationAdapter{
         // show the world rotation of the bone
 
         // render the background physics mesh
-        /*shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         short[] indices = meshData.getIndices();
         double[] vertices = deformMesh.getVertices();
         // double[] vertices = deformMesh.getRefVertices();
@@ -169,7 +179,7 @@ public class PbdTest2 extends ApplicationAdapter{
             float y3 = (float)(vertices[i3*2+1]*scale);
             shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
         }
-        shapeRenderer.end();*/
+        shapeRenderer.end();
 
     }
 
@@ -183,7 +193,7 @@ public class PbdTest2 extends ApplicationAdapter{
     }
 
     public static void main (String[] args) throws Exception {
-        new Lwjgl3Application(new PbdTest2());
+        new Lwjgl3Application(new PbdApplication());
     }
 
 }

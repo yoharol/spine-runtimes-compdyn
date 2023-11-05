@@ -63,7 +63,6 @@ public class LbsData {
         weightsStart[0] = 0;
         for(int i=1; i<n_bones; i++){
             weightsStart[i] = weightsStart[i-1] + weightsCount[i-1];
-            System.out.println(weightsStart[i] + " " + weightsCount[i]);
         }
         int n_weights = weightsStart[n_bones-1] + weightsCount[n_bones-1];
         weightsIndex = new int[n_weights];
@@ -87,6 +86,12 @@ public class LbsData {
             v_index += 1;
         }
 
+        for(int i=0; i<n_bones; i++){
+            // print bone data and weights data
+            System.out.println("Bone " + i + ": " + boneObjs.get(i).getData().getName());
+            System.out.println(weightsStart[i] + " " + weightsCount[i]);
+        }
+
     }
 
     // update bone states
@@ -104,6 +109,14 @@ public class LbsData {
         for (int i=0; i<n_verts*2; i++){
             rigVertices[i] = rigVerticesFloats[i] / scale;
         }
+    }
+
+    public int getStartIndex(int j){
+        return weightsStart[j];
+    }
+
+    public int getEndIndex(int j){
+        return weightsStart[j] + weightsCount[j];
     }
 
     public Bone getBone(int i){
@@ -151,4 +164,25 @@ public class LbsData {
     public int getN_bones(){
         return n_bones;
     }
+
+
+    public int[] getFixedBones(int[] free_bones){
+        int[] fixed_bones = new int[n_bones - free_bones.length];
+        int idx = 0;
+        for(int i=0; i<n_bones; i++){
+            boolean is_free = false;
+            for(int j=0; j<free_bones.length; j++){
+                if(i == free_bones[j]){
+                    is_free = true;
+                    break;
+                }
+            }
+            if(!is_free){
+                fixed_bones[idx] = i;
+                idx += 1;
+            }
+        }
+        return fixed_bones;
+    }
+
 }

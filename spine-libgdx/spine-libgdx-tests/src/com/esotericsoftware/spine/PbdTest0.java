@@ -20,8 +20,8 @@ public class PbdTest0  extends ApplicationAdapter {
     @Override
     public void create () {
         sceneData = new PhysicsSceneData();
-        sceneData.setGravity(0, -100f);
-        // sceneData.setDamping(0.99f);
+        sceneData.setGravity(0, -10f);
+        sceneData.setDamping(0.995f);
 
         shapeRenderer = new ShapeRenderer();
         camera = new OrthographicCamera();
@@ -32,7 +32,7 @@ public class PbdTest0  extends ApplicationAdapter {
         meshData = new MeshData(vertices, indices);
         deformMesh = new DeformMesh(meshData);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
-        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-8f, 1e-8f));
+        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3f, 1e-3f));
         pbdFramework.initConstraints();
     }
 
@@ -55,9 +55,21 @@ public class PbdTest0  extends ApplicationAdapter {
         camera.update();
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        float[] vertices = ArrayOpr.convertArray(meshData.getVertices());
-        shapeRenderer.triangle(vertices[0], vertices[1], vertices[2], vertices[3], vertices[4], vertices[5]);
-        shapeRenderer.triangle(vertices[2], vertices[3], vertices[4], vertices[5], vertices[6], vertices[7]);
+        short[] indices = meshData.getIndices();
+        double[] vertices = deformMesh.getVertices();
+        double scale = meshData.getScale();
+        for (int i=0; i<indices.length / 3; i++){
+            short i1 = indices[i*3];
+            short i2 = indices[i*3+1];
+            short i3 = indices[i*3+2];
+            float x1 = (float)(vertices[i1*2]*scale);
+            float y1 = (float)(vertices[i1*2+1]*scale);
+            float x2 = (float)(vertices[i2*2]*scale);
+            float y2 = (float)(vertices[i2*2+1]*scale);
+            float x3 = (float)(vertices[i3*2]*scale);
+            float y3 = (float)(vertices[i3*2+1]*scale);
+            shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
+        }
         shapeRenderer.end();
     }
 

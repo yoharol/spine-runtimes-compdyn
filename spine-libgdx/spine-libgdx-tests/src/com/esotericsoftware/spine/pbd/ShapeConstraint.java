@@ -6,16 +6,12 @@ public class ShapeConstraint extends BaseConstraint{
     int n_cons;
     DeformMesh deformMesh;
     LbsData lbsData;
-    double alpha;
-    double dt;
 
-    public ShapeConstraint(DeformMesh deformMesh, LbsData lbsData, PhysicsSceneData sceneData,double alpha){
+    public ShapeConstraint(DeformMesh deformMesh, LbsData lbsData){
         this.deformMesh = deformMesh;
         this.lbsData = lbsData;
         n_bones = lbsData.n_bones;
         n_cons = lbsData.weightsIndex.length;
-        dt = sceneData.dt;
-        this.alpha = alpha / (dt * dt);
     }
 
     @Override
@@ -47,17 +43,8 @@ public class ShapeConstraint extends BaseConstraint{
             Vec2 v_rig= ArrayOpr.getVec2(lbsData.getRigVerts(), i);
             Vec2 v = ArrayOpr.getVec2(deformMesh.vertices, i);
             v.sub(v_rig);
-            // v.div(1.0 + alpha / w);
             ArrayOpr.addVec2(deformMesh.vertices, i, v, -w);
         }
     }
-
-
-
-
-
-
-
-
 
 }
