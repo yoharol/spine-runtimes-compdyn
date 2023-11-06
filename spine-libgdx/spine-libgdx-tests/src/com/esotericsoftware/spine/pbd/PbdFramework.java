@@ -39,7 +39,7 @@ public class PbdFramework {
     public void updateVelocity(){
         for(int i=0; i<n_verts; i++){
             ArrayOpr.setAddArr(velocities, i, vertices, i, vertices_cache, i, -1f);
-            ArrayOpr.mulScale(velocities, i, sceneData.damping/sceneData.dt);
+            ArrayOpr.mulScale(velocities, i, Math.exp(-sceneData.damping * sceneData.dt)/sceneData.dt);
         }
     }
 

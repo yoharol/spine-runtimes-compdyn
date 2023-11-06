@@ -122,9 +122,9 @@ The workflow is very simple:
 
 1. [Generate prediction](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/cons/framework.py#L25C1-L31C80): $`\mathbf{p}_i = \mathbf{x}^k_i + \mathbf{v}_i^k dt + \mathbf{f}_{ext}dt^2`$ 
 2. Constraints projection: Iterate through all constraints $C$, project the constraints to modify $\mathbf{p}_i$
-3. [Update velocity](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/cons/framework.py#L33C1-L38C68): Finish this time step, update velocity $`\mathbf{v}_i^{k+1} = k_{damp}\frac{\mathbf{p}_i - \mathbf{x}^k_i}{dt}`$.
+3. [Update velocity](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/cons/framework.py#L33C1-L38C68): Finish this time step, update velocity $`\mathbf{v}_i^{k+1} = e^{-\beta dt}\frac{\mathbf{p}_i - \mathbf{x}^k_i}{dt}`$.
    
-$k_{damp}\in [0, 1]$ is a simple damping parameter. $`k_{damp}=1`$ means no damping.
+$\beta$ is a damping parameter. $`\beta=0`$ means no damping.
 
 The [python code](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/test/fish_deform.py#L67C1-L71C22) is
 

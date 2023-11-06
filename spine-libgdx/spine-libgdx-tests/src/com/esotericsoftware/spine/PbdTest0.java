@@ -81,7 +81,7 @@ public class PbdTest0 extends ApplicationAdapter{
         meshData = new MeshData(worldVertices, indices);
 
         // set up pbd framework
-        double damping = 1.0;
+        double damping = 0.0;
         int solver_iterations = 6;
 
         deformMesh = new DeformMesh(meshData);
