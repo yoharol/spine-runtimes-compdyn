@@ -7,7 +7,6 @@ import com.esotericsoftware.spine.attachments.MeshAttachment;
 
 public class LbsData {
     DeformMesh deformMesh;
-    MeshAttachment meshAttachment;
 
     int n_verts;
     int n_bones;
@@ -100,14 +99,13 @@ public class LbsData {
             Bone bone = boneObjs[i];
             boneMatsRef[i] = new Mat2x2(bone.getA(), bone.getB(), bone.getC(), bone.getD());
             bonePosRef[i] = new Vec2(bone.getWorldX(), bone.getWorldY());
-            bonePosRef[i].div(deformMesh.getScale());
         }
     }
 
-    public void updateLbsVerts(MeshAttachment meshAttachment, Slot slot, double scale){
+    public void updateLbsVerts(MeshAttachment meshAttachment, Slot slot){
         meshAttachment.computeWorldVertices(slot, 0, n_verts*2, rigVerticesFloats, 0, 2);
         for (int i=0; i<n_verts*2; i++){
-            rigVertices[i] = rigVerticesFloats[i] / scale;
+            rigVertices[i] = rigVerticesFloats[i];
         }
     }
 
@@ -139,14 +137,18 @@ public class LbsData {
         for(int idx = startidx; idx < endidx; idx++){
             int i = weightsIndex[idx];
             double w = weights[idx];
-            double x_bone = boneObjs[j].getWorldX() / deformMesh.getScale();
-            double y_bone = boneObjs[j].getWorldY() / deformMesh.getScale();
+            double x_bone = boneObjs[j].getWorldX();
+            double y_bone = boneObjs[j].getWorldY();
             double x_bone_ref = bonePosRef[j].x();
             double y_bone_ref = bonePosRef[j].y();
             double x_ref = deformMesh.refVertices[i*2] - x_bone_ref;
             double y_ref = deformMesh.refVertices[i*2+1] - y_bone_ref;
             double x = deformMesh.vertices[i*2] - x_bone;
             double y = deformMesh.vertices[i*2+1] - y_bone;
+            x *= deformMesh.getScale();
+            y *= deformMesh.getScale();
+            x_ref *= deformMesh.getScale();
+            y_ref *= deformMesh.getScale();
             Mat2x2 D = new Mat2x2(x*x_ref, x*y_ref, y*x_ref, y*y_ref);
             D.mul(w*deformMesh.vertMass[i]);
             P.add(D);
@@ -156,14 +158,13 @@ public class LbsData {
         }
         Q.inverse();
         P.dot(Q);
-        if (blend == 0.0){
-            return P;
+        if (blend > 0.0) {
+            Mat2x2[] RS = P.polarDecomposition();
+            Q.set(RS[0]);
+            Q.mul(blend);
+            P.mul(1 - blend);
+            P.add(Q);
         }
-        Mat2x2[] RS = P.polarDecomposition();
-        Q.set(RS[0]);
-        Q.mul(blend);
-        P.mul(1-blend);
-        P.add(Q);
         P.dot(boneMatsRef[j]);
         return P;
     }

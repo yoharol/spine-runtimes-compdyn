@@ -34,6 +34,10 @@ public final class ArrayOpr {
         return new Vec2(arr[i*2], arr[i*2+1]);
     }
 
+    public static Vec2 getVec2(double[] arr, int i, double scale){
+        return new Vec2(arr[i*2]*scale, arr[i*2+1]*scale);
+    }
+
     public static void setVec2(double[] arr, int i, Vec2 v){
         arr[i*2] = v.x();
         arr[i*2+1] = v.y();

@@ -10,6 +10,7 @@ public class LbsConstraint extends BaseConstraint{
     double alpha;
     double dt;
 
+
     public LbsConstraint(DeformMesh deformMesh, LbsData lbsData, PhysicsSceneData sceneData,double alpha){
         this.deformMesh = deformMesh;
         this.lbsData = lbsData;
@@ -28,7 +29,7 @@ public class LbsConstraint extends BaseConstraint{
                 int i=lbsData.weightsIndex[k];
                 double w = lbsData.weights[k];
                 double m = deformMesh.vertMass[i];
-                Vec2 v_ref= ArrayOpr.getVec2(deformMesh.refVertices, i);
+                Vec2 v_ref= ArrayOpr.getVec2(deformMesh.refVertices, i, deformMesh.getScale());
                 c_deriv[j][0] += m * w * w * v_ref.x() * v_ref.x();
                 c_deriv[j][1] += m * w * w * v_ref.y() * v_ref.y();
                 c_deriv[j][2] += m * w * w;
@@ -65,20 +66,20 @@ public class LbsConstraint extends BaseConstraint{
             int i = lbsData.weightsIndex[idx];
             double w = lbsData.weights[idx];
             double m = deformMesh.vertMass[i];
-            Vec2 vc = ArrayOpr.getVec2(deformMesh.vertices, i);
-            vc.sub(ArrayOpr.getVec2(lbsData.rigVertices, i));
+            Vec2 vc = ArrayOpr.getVec2(deformMesh.vertices, i, deformMesh.getScale());
+            vc.sub(ArrayOpr.getVec2(lbsData.rigVertices, i, deformMesh.getScale()));
             c[0] += m * w * vc.x();
             c[1] += m * w * vc.y();
         }
         for (int k = 0; k <= 1; k++) {
-            delta_lambda[k] = -c[k] / (c_deriv[j][3] + alpha);
+            delta_lambda[k] = -c[k] / (c_deriv[j][2] + alpha);
         }
         for (int idx = startidx; idx < endidx; idx++) {
             int i = lbsData.weightsIndex[idx];
             double w = lbsData.weights[idx];
             Vec2 v_delta = new Vec2(0.0, 0.0);
             v_delta.add(w * delta_lambda[0], w * delta_lambda[1]);
-            ArrayOpr.addVec2(deformMesh.vertices, i, v_delta);
+            ArrayOpr.addVec2(deformMesh.vertices, i, v_delta, 1.0 / deformMesh.getScale());
         }
     }
 
@@ -96,9 +97,9 @@ public class LbsConstraint extends BaseConstraint{
                 int i = lbsData.weightsIndex[idx];
                 double w = lbsData.weights[idx];
                 double m = deformMesh.vertMass[i];
-                Vec2 vc = ArrayOpr.getVec2(deformMesh.vertices, i);
-                vc.sub(ArrayOpr.getVec2(lbsData.rigVertices, i));
-                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.refVertices, i);
+                Vec2 vc = ArrayOpr.getVec2(deformMesh.vertices, i, deformMesh.getScale());
+                vc.sub(ArrayOpr.getVec2(lbsData.rigVertices, i, deformMesh.getScale()));
+                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.refVertices, i, deformMesh.getScale());
                 if(kdx == 0) {
                     c[0] += m * w * v_ref.x() * vc.x();
                     c[1] += m * w * v_ref.x() * vc.y();
@@ -116,12 +117,12 @@ public class LbsConstraint extends BaseConstraint{
                 int i = lbsData.weightsIndex[idx];
                 double w = lbsData.weights[idx];
                 Vec2 v_delta = new Vec2(0.0, 0.0);
-                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.refVertices, i);
+                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.refVertices, i, deformMesh.getScale());
                 if (kdx == 0){
                     v_delta.add(w * delta_lambda[0] * v_ref.x(), w * delta_lambda[1] * v_ref.x());}
                 else{
                     v_delta.add(w * delta_lambda[0] * v_ref.y(), w * delta_lambda[1] * v_ref.y());}
-                ArrayOpr.addVec2(deformMesh.vertices, i, v_delta);
+                ArrayOpr.addVec2(deformMesh.vertices, i, v_delta, 1.0 / deformMesh.getScale());
             }
         }
     }

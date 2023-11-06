@@ -34,9 +34,9 @@ public class DeformConstraint extends BaseConstraint {
             int i0 = deformMesh.indices[k*3];
             int i1 = deformMesh.indices[k*3+1];
             int i2 = deformMesh.indices[k*3+2];
-            Vec2 v0 = ArrayOpr.getVec2(deformMesh.vertices, i0);
-            Vec2 v1 = ArrayOpr.getVec2(deformMesh.vertices, i1);
-            Vec2 v2 = ArrayOpr.getVec2(deformMesh.vertices, i2);
+            Vec2 v0 = ArrayOpr.getVec2(deformMesh.vertices, i0, deformMesh.getScale());
+            Vec2 v1 = ArrayOpr.getVec2(deformMesh.vertices, i1, deformMesh.getScale());
+            Vec2 v2 = ArrayOpr.getVec2(deformMesh.vertices, i2, deformMesh.getScale());
             double w0 = 1.0 / deformMesh.vertMass[i0];
             double w1 = 1.0 / deformMesh.vertMass[i1];
             double w2 = 1.0 / deformMesh.vertMass[i2];
@@ -85,18 +85,18 @@ public class DeformConstraint extends BaseConstraint {
                     sum_par_cdh * delta_lambda_h) / (alpha_tilde_d + sum_par_cd);
 
             par_ch_x0.mul(delta_lambda_h*w0);
-            ArrayOpr.addVec2(deformMesh.vertices, i0, par_ch_x0);
+            ArrayOpr.addVec2(deformMesh.vertices, i0, par_ch_x0, 1.0 / deformMesh.getScale());
             par_ch_x1.mul(delta_lambda_h*w1);
-            ArrayOpr.addVec2(deformMesh.vertices, i1, par_ch_x1);
+            ArrayOpr.addVec2(deformMesh.vertices, i1, par_ch_x1, 1.0 / deformMesh.getScale());
             par_ch_x2.mul(delta_lambda_h*w2);
-            ArrayOpr.addVec2(deformMesh.vertices, i2, par_ch_x2);
+            ArrayOpr.addVec2(deformMesh.vertices, i2, par_ch_x2, 1.0 / deformMesh.getScale());
 
             par_cd_x0.mul(delta_lambda_d*w0);
-            ArrayOpr.addVec2(deformMesh.vertices, i0, par_cd_x0);
+            ArrayOpr.addVec2(deformMesh.vertices, i0, par_cd_x0, 1.0 / deformMesh.getScale());
             par_cd_x1.mul(delta_lambda_d*w1);
-            ArrayOpr.addVec2(deformMesh.vertices, i1, par_cd_x1);
+            ArrayOpr.addVec2(deformMesh.vertices, i1, par_cd_x1, 1.0 / deformMesh.getScale());
             par_cd_x2.mul(delta_lambda_d*w2);
-            ArrayOpr.addVec2(deformMesh.vertices, i2, par_cd_x2);
+            ArrayOpr.addVec2(deformMesh.vertices, i2, par_cd_x2, 1.0 / deformMesh.getScale());
         }
     }
 }

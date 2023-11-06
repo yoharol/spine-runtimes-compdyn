@@ -111,13 +111,13 @@ public class PbdApplication_SpineBoy extends ApplicationAdapter{
         state.update(0);
         state.apply(skeleton);
         skeleton.updateWorldTransform();
-        lbsData.updateLbsVerts(meshAttachment, slot, meshData.getScale());
+        lbsData.updateLbsVerts(meshAttachment, slot);
         meshData.updateVertices(lbsData.getRigVerts());
 
     }
 
     void PhysicsUpdate(){
-        lbsData.updateLbsVerts(meshAttachment, slot, meshData.getScale());
+        lbsData.updateLbsVerts(meshAttachment, slot);
         for(int i=0; i< sceneData.iterations; i++) {
             pbdFramework.makePrediction();
             deformConstraint.preUpdateProject();
@@ -170,7 +170,7 @@ public class PbdApplication_SpineBoy extends ApplicationAdapter{
         // show the world rotation of the bone
 
         // render the background sim mesh
-        /* shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         short[] indices = meshData.getIndices();
         double[] vertices = deformMesh.getVertices();
         // double[] vertices = deformMesh.getRefVertices();
@@ -180,15 +180,15 @@ public class PbdApplication_SpineBoy extends ApplicationAdapter{
             short i1 = indices[i*3];
             short i2 = indices[i*3+1];
             short i3 = indices[i*3+2];
-            float x1 = (float)(vertices[i1*2]*scale);
-            float y1 = (float)(vertices[i1*2+1]*scale);
-            float x2 = (float)(vertices[i2*2]*scale);
-            float y2 = (float)(vertices[i2*2+1]*scale);
-            float x3 = (float)(vertices[i3*2]*scale);
-            float y3 = (float)(vertices[i3*2+1]*scale);
+            float x1 = (float)vertices[i1*2];
+            float y1 = (float)vertices[i1*2+1];
+            float x2 = (float)vertices[i2*2];
+            float y2 = (float)vertices[i2*2+1];
+            float x3 = (float)vertices[i3*2];
+            float y3 = (float)vertices[i3*2+1];
             shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
         }
-        shapeRenderer.end();*/
+        shapeRenderer.end();
 
     }
 

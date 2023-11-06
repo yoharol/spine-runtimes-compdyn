@@ -86,7 +86,7 @@ public class PbdTest0 extends ApplicationAdapter{
 
         deformMesh = new DeformMesh(meshData);
         sceneData = new PhysicsSceneData();
-        sceneData.setGravity(0, -1f);
+        sceneData.setGravity(0, -200f);
         sceneData.setDamping(damping);
         sceneData.setFps(60, solver_iterations);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
@@ -142,17 +142,16 @@ public class PbdTest0 extends ApplicationAdapter{
         double[] vertices = deformMesh.getVertices();
         // double[] vertices = deformMesh.getRefVertices();
         // double[] vertices = lbsData.getRigVerts();
-        double scale = meshData.getScale();
         for (int i=0; i<indices.length / 3; i++){
             short i1 = indices[i*3];
             short i2 = indices[i*3+1];
             short i3 = indices[i*3+2];
-            float x1 = (float)(vertices[i1*2]*scale);
-            float y1 = (float)(vertices[i1*2+1]*scale);
-            float x2 = (float)(vertices[i2*2]*scale);
-            float y2 = (float)(vertices[i2*2+1]*scale);
-            float x3 = (float)(vertices[i3*2]*scale);
-            float y3 = (float)(vertices[i3*2+1]*scale);
+            float x1 = (float)vertices[i1*2];
+            float y1 = (float)vertices[i1*2+1];
+            float x2 = (float)vertices[i2*2];
+            float y2 = (float)vertices[i2*2+1];
+            float x3 = (float)vertices[i3*2];
+            float y3 = (float)vertices[i3*2+1];
             shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
         }
         shapeRenderer.end();

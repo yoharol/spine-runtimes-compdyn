@@ -10,7 +10,8 @@ public class DeformMesh {
     short[] indices;
     double[] faceMass;
     double[] vertMass;
-    double scale;
+
+    MeshData meshData;
 
     Mat2x2[] invB;
 
@@ -26,15 +27,15 @@ public class DeformMesh {
         for(int i=0; i<n_faces; i++){
             invB[i] = new Mat2x2(1, 0, 0, 1);
         }
+        meshData = data;
         setMeshData();
-        scale = data.getScale();
     }
 
     public void setMeshData(){
         for(int i=0; i<n_faces; i++){
-            Vec2 v0 = ArrayOpr.getVec2(vertices, indices[i*3]);
-            Vec2 v1 = ArrayOpr.getVec2(vertices, indices[i*3+1]);
-            Vec2 v2 = ArrayOpr.getVec2(vertices, indices[i*3+2]);
+            Vec2 v0 = ArrayOpr.getVec2(vertices, indices[i*3], getScale());
+            Vec2 v1 = ArrayOpr.getVec2(vertices, indices[i*3+1], getScale());
+            Vec2 v2 = ArrayOpr.getVec2(vertices, indices[i*3+2], getScale());
             v0.sub(v2);
             v1.sub(v2);
             invB[i].copy(new Mat2x2(v0, v1));
@@ -50,11 +51,10 @@ public class DeformMesh {
     public double[] getVertices(){
         return vertices;
     }
-
     public double[] getRefVertices(){
         return refVertices;
     }
-    public double getScale(){return scale;}
+    public double getScale(){return meshData.getScale();}
 
 
 }
