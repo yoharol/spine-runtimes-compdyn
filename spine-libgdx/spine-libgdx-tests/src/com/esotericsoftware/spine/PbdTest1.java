@@ -78,14 +78,13 @@ public class PbdTest1 extends ApplicationAdapter{
         int[] bones = meshAttachment.getBones();
         Array<Bone> boneObjs = slot.getSkeleton().getBones();
         int n_verts = meshAttachment.getWorldVerticesLength()>>1;
-        int n_faces = indices.length/3;
         float[] fWorldVertices = new float[n_verts*2];
         meshAttachment.computeWorldVertices(slot, 0, n_verts*2, fWorldVertices, 0, 2);
         double[] worldVertices = ArrayOpr.convertArray(fWorldVertices);
         meshData = new MeshData(worldVertices, indices);
 
         // set up pbd framework
-        double damping = 0.987;
+        double damping = 0.98;
         int solver_iterations = 6;
 
         deformMesh = new DeformMesh(meshData);
@@ -98,8 +97,8 @@ public class PbdTest1 extends ApplicationAdapter{
         pbdFramework = new PbdFramework(sceneData, deformMesh);
 
         // set up constraints
-        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3), 0);
-        pbdFramework.addConstraint(new LbsConstraint(deformMesh, lbsData, sceneData, 1e-4), 1);
+        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3));
+        pbdFramework.addConstraint(new LbsConstraint(deformMesh, lbsData, sceneData, 1e-5));
         pbdFramework.initConstraints();
 
         startTime = TimeUtils.millis();

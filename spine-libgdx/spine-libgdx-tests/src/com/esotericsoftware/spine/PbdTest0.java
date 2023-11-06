@@ -92,7 +92,7 @@ public class PbdTest0 extends ApplicationAdapter{
         pbdFramework = new PbdFramework(sceneData, deformMesh);
 
         // set up constraints
-        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3), 0);
+        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3));
         pbdFramework.initConstraints();
     }
 

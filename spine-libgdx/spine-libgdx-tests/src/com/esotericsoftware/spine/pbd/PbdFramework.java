@@ -23,11 +23,6 @@ public class PbdFramework {
         n_verts = deformMesh.n_verts;
     }
 
-    public void addConstraint(BaseConstraint constraint, int level){
-        constraints.add(constraint);
-        constraintLevels.add(level);
-    }
-
     public void addConstraint(BaseConstraint constraint){
         constraints.add(constraint);
         constraintLevels.add(0);

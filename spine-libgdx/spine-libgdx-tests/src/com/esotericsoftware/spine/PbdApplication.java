@@ -78,7 +78,6 @@ public class PbdApplication extends ApplicationAdapter{
         int[] bones = meshAttachment.getBones();
         Array<Bone> boneObjs = slot.getSkeleton().getBones();
         int n_verts = meshAttachment.getWorldVerticesLength()>>1;
-        int n_faces = indices.length/3;
         float[] fWorldVertices = new float[n_verts*2];
         meshAttachment.computeWorldVertices(slot, 0, n_verts*2, fWorldVertices, 0, 2);
         double[] worldVertices = ArrayOpr.convertArray(fWorldVertices);
@@ -104,7 +103,7 @@ public class PbdApplication extends ApplicationAdapter{
 
         // set up constraints
         deformConstraint = new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3);
-        lbsConstraint = new LbsConstraint(deformMesh, lbsData, sceneData, 1e-4);
+        lbsConstraint = new LbsConstraint(deformMesh, lbsData, sceneData, 1e-5);
 
         // update world vertices to the first frame of animation
         state.update(0);

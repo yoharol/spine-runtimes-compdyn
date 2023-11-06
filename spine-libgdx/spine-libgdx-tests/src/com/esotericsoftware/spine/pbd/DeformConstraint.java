@@ -37,6 +37,9 @@ public class DeformConstraint extends BaseConstraint {
             Vec2 v0 = ArrayOpr.getVec2(deformMesh.vertices, i0, deformMesh.getScale());
             Vec2 v1 = ArrayOpr.getVec2(deformMesh.vertices, i1, deformMesh.getScale());
             Vec2 v2 = ArrayOpr.getVec2(deformMesh.vertices, i2, deformMesh.getScale());
+            Vec2 v0_ref = ArrayOpr.getVec2(deformMesh.refVertices, i0, deformMesh.getScale());
+            Vec2 v1_ref = ArrayOpr.getVec2(deformMesh.refVertices, i1, deformMesh.getScale());
+            Vec2 v2_ref = ArrayOpr.getVec2(deformMesh.refVertices, i2, deformMesh.getScale());
             double w0 = 1.0 / deformMesh.vertMass[i0];
             double w1 = 1.0 / deformMesh.vertMass[i1];
             double w2 = 1.0 / deformMesh.vertMass[i2];
@@ -45,10 +48,12 @@ public class DeformConstraint extends BaseConstraint {
             }
             v0.sub(v2);
             v1.sub(v2);
-            Mat2x2 B = deformMesh.invB[k];
+            v0_ref.sub(v2_ref);
+            v1_ref.sub(v2_ref);
+            Mat2x2 B = new Mat2x2(v0_ref, v1_ref);
+            B.inverse();
             Mat2x2 F = new Mat2x2(v0, v1);
             F.dot(B);
-
 
             double c_h = F.det() - 1f;
             Mat2x2 par_ch = F.detDiff();
