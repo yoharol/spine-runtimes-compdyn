@@ -54,20 +54,6 @@ public class PbdFramework {
         }
     }
 
-    public void preUpdateProject(){
-        for (BaseConstraint constraint : constraints) {
-            constraint.preUpdateProject();
-        }
-    }
-
-    public void project(int level){
-        for(int i=0; i<constraints.size(); i++){
-            if(constraintLevels.get(i) == level){
-                constraints.get(i).project();
-            }
-        }
-    }
-
     public void project(){
         for (BaseConstraint constraint : constraints) {
             constraint.project();

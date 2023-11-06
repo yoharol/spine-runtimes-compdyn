@@ -4,8 +4,6 @@ public class DeformConstraint extends BaseConstraint {
 
     DeformMesh deformMesh;
     int n_faces;
-    double[] hydroLambda;
-    double[] deviaLambda;
 
     double hydro_alpha;
     double devia_alpha;
@@ -16,8 +14,6 @@ public class DeformConstraint extends BaseConstraint {
     public DeformConstraint(DeformMesh deformMesh, PhysicsSceneData physicsSceneData, double hydro_alpha, double devia_alpha) {
         this.deformMesh = deformMesh;
         n_faces = deformMesh.n_faces;
-        hydroLambda = new double[n_faces];
-        deviaLambda = new double[n_faces];
         dt = physicsSceneData.dt;
         this.hydro_alpha = hydro_alpha / (dt * dt);
         this.devia_alpha = devia_alpha / (dt * dt);
@@ -30,10 +26,6 @@ public class DeformConstraint extends BaseConstraint {
 
     @Override
     public void preUpdateProject() {
-        for(int i=0; i<n_faces; i++){
-            deviaLambda[i] = 0;
-            hydroLambda[i] = 0;
-        }
     }
 
     @Override
@@ -83,13 +75,13 @@ public class DeformConstraint extends BaseConstraint {
 
             double sum_par_cdh = par_cd_x0.dot(par_ch_x0) * w0 + par_cd_x1.dot(par_ch_x1) * w1 + par_cd_x2.dot(par_ch_x2) * w2;
             double delta_lambda_h = (sum_par_cdh *
-                    (c_d + alpha_tilde_d * deviaLambda[k]) -
-                    (c_h + alpha_tilde_h * hydroLambda[k]) *
+                    (c_d) -
+                    (c_h) *
                             (alpha_tilde_d + sum_par_cd)) / (
                     (alpha_tilde_h + sum_par_ch) *
                             (alpha_tilde_d + sum_par_cd) -
                             sum_par_cdh * sum_par_cdh);
-            double delta_lambda_d = - (c_d + alpha_tilde_d * deviaLambda[k] +
+            double delta_lambda_d = - (c_d +
                     sum_par_cdh * delta_lambda_h) / (alpha_tilde_d + sum_par_cd);
 
             par_ch_x0.mul(delta_lambda_h*w0);
@@ -105,9 +97,6 @@ public class DeformConstraint extends BaseConstraint {
             ArrayOpr.addVec2(deformMesh.vertices, i1, par_cd_x1);
             par_cd_x2.mul(delta_lambda_d*w2);
             ArrayOpr.addVec2(deformMesh.vertices, i2, par_cd_x2);
-
-            hydroLambda[k] += delta_lambda_h;
-            deviaLambda[k] += delta_lambda_d;
         }
     }
 }

@@ -187,8 +187,11 @@ public class Mat2x2 {
         return m[0][0] + " " + m[0][1] + "\n" + m[1][0] + " " + m[1][1] + "\n";
     }
 
-    // fast svd decomposition of 2x2 matrix
+    // fast polar decomposition of 2x2 matrix
     // https://ieeexplore.ieee.org/document/486688
+    // return [R, S]
+    // R: rotation part
+    // S: symmetric part
     public Mat2x2[] polarDecomposition(){
         Mat2x2[] RS = new Mat2x2[2];
         double a = m[0][0];

@@ -36,7 +36,6 @@ public class PbdApplication_SpineBoy extends ApplicationAdapter{
     PhysicsSceneData sceneData;
     PbdFramework pbdFramework;
     DeformConstraint deformConstraint;
-    ShapeConstraint shapeConstraint;
     LbsConstraint lbsConstraint;
 
     int[] freeBones;
@@ -95,7 +94,7 @@ public class PbdApplication_SpineBoy extends ApplicationAdapter{
         // sceneData.setGravity(0, 0f);
         sceneData.setGravity(0, 0f);
         sceneData.setDamping(damping);
-        sceneData.setFps(60, solver_iterations, 1);
+        sceneData.setFps(60, solver_iterations);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
 
 
@@ -170,7 +169,7 @@ public class PbdApplication_SpineBoy extends ApplicationAdapter{
 
         // show the world rotation of the bone
 
-        // render the background physics mesh
+        // render the background sim mesh
         /* shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         short[] indices = meshData.getIndices();
         double[] vertices = deformMesh.getVertices();

@@ -127,6 +127,10 @@ public class LbsData {
         return rigVertices;
     }
 
+    // extract bone transformation from vertices
+    // blend: 0.0 - 1.0, blending of affine transformation and rotation
+    //      0.0: only affine transformation
+    //      1.0: only rotation
     public Mat2x2 inverseMixed(int j, double blend){
         Mat2x2 P = new Mat2x2(0.0, 0.0, 0.0, 0.0);
         Mat2x2 Q = new Mat2x2(0.0, 0.0, 0.0, 0.0);
@@ -152,6 +156,9 @@ public class LbsData {
         }
         Q.inverse();
         P.dot(Q);
+        if (blend == 0.0){
+            return P;
+        }
         Mat2x2[] RS = P.polarDecomposition();
         Q.set(RS[0]);
         Q.mul(blend);

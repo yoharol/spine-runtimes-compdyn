@@ -36,7 +36,6 @@ public class PbdApplication extends ApplicationAdapter{
     PhysicsSceneData sceneData;
     PbdFramework pbdFramework;
     DeformConstraint deformConstraint;
-    ShapeConstraint shapeConstraint;
     LbsConstraint lbsConstraint;
 
     int[] freeBones;
@@ -95,9 +94,8 @@ public class PbdApplication extends ApplicationAdapter{
         // sceneData.setGravity(0, 0f);
         sceneData.setGravity(0, 0f);
         sceneData.setDamping(damping);
-        sceneData.setFps(60, solver_iterations, 1);
+        sceneData.setFps(60, solver_iterations);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
-
 
         // set up free and fixed bones
         freeBones = new int[]{7, 8, 9, 11, 12, 13, 14, 15, 16};
@@ -107,6 +105,13 @@ public class PbdApplication extends ApplicationAdapter{
         // set up constraints
         deformConstraint = new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3);
         lbsConstraint = new LbsConstraint(deformMesh, lbsData, sceneData, 1e-4);
+
+        // update world vertices to the first frame of animation
+        state.update(0);
+        state.apply(skeleton);
+        skeleton.updateWorldTransform();
+        lbsData.updateLbsVerts(meshAttachment, slot, meshData.getScale());
+        meshData.updateVertices(lbsData.getRigVerts());
     }
 
     void PhysicsUpdate(){

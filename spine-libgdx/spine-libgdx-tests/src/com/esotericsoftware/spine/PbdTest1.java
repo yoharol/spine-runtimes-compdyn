@@ -85,8 +85,7 @@ public class PbdTest1 extends ApplicationAdapter{
         meshData = new MeshData(worldVertices, indices);
 
         // set up pbd framework
-        double damping = 0.95;
-        double lbs_alpha = 1e-4;
+        double damping = 0.987;
         int solver_iterations = 6;
 
         deformMesh = new DeformMesh(meshData);
@@ -95,12 +94,12 @@ public class PbdTest1 extends ApplicationAdapter{
         // sceneData.setGravity(0, 0f);
         sceneData.setGravity(0, 0f);
         sceneData.setDamping(damping);
-        sceneData.setFps(60, solver_iterations, 1);
+        sceneData.setFps(60, solver_iterations);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
 
         // set up constraints
-        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-2), 0);
-        pbdFramework.addConstraint(new LbsConstraint(deformMesh, lbsData, sceneData, lbs_alpha), 1);
+        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3), 0);
+        pbdFramework.addConstraint(new LbsConstraint(deformMesh, lbsData, sceneData, 1e-4), 1);
         pbdFramework.initConstraints();
 
         startTime = TimeUtils.millis();
@@ -111,11 +110,7 @@ public class PbdTest1 extends ApplicationAdapter{
         lbsData.updateLbsVerts(meshAttachment, slot, meshData.getScale());
         for(int i=0; i< sceneData.iterations; i++) {
             pbdFramework.makePrediction();
-            pbdFramework.preUpdateProject();
-            for(int k=0; k< sceneData.solver_steps; k++){
-                pbdFramework.project(0);
-                pbdFramework.project(1);
-            }
+            pbdFramework.project();
             pbdFramework.collisionY(0);
             pbdFramework.updateVelocity();
         }

@@ -6,7 +6,6 @@ public class LbsConstraint extends BaseConstraint{
 
     DeformMesh deformMesh;
     LbsData lbsData;
-    double[][] lambda;
     double[][] c_deriv;
     double alpha;
     double dt;
@@ -17,7 +16,6 @@ public class LbsConstraint extends BaseConstraint{
         n_bones = lbsData.n_bones;
         dt = sceneData.dt;
         this.alpha = alpha / (dt * dt);
-        lambda = new double[n_bones][6];
         c_deriv = new double[n_bones][3];
     }
 
@@ -40,11 +38,6 @@ public class LbsConstraint extends BaseConstraint{
 
     @Override
     public void preUpdateProject() {
-        for(int j=0; j<n_bones; j++){
-            for(int k=0; k<6; k++){
-                lambda[j][k] = 0;
-            }
-        }
     }
 
     @Override
@@ -55,12 +48,48 @@ public class LbsConstraint extends BaseConstraint{
     }
 
     public void projectSingleConstraint(int j){
+        projectSingleConstraint_Affine(j);
+        projectSingleConstraint_Translation(j);
+    }
+
+    // Apply the translation of bones to the vertices
+    public void projectSingleConstraint_Translation(int j){
         int startidx = lbsData.weightsStart[j];
         int endidx = startidx + lbsData.weightsCount[j];
         if (startidx == endidx) {
             return;
         }
-        for (int kdx = 0; kdx < 3; kdx++) {
+        double[] c = new double[2];
+        double[] delta_lambda = new double[2];
+        for (int idx = startidx; idx < endidx; idx++) {
+            int i = lbsData.weightsIndex[idx];
+            double w = lbsData.weights[idx];
+            double m = deformMesh.vertMass[i];
+            Vec2 vc = ArrayOpr.getVec2(deformMesh.vertices, i);
+            vc.sub(ArrayOpr.getVec2(lbsData.rigVertices, i));
+            c[0] += m * w * vc.x();
+            c[1] += m * w * vc.y();
+        }
+        for (int k = 0; k <= 1; k++) {
+            delta_lambda[k] = -c[k] / (c_deriv[j][3] + alpha);
+        }
+        for (int idx = startidx; idx < endidx; idx++) {
+            int i = lbsData.weightsIndex[idx];
+            double w = lbsData.weights[idx];
+            Vec2 v_delta = new Vec2(0.0, 0.0);
+            v_delta.add(w * delta_lambda[0], w * delta_lambda[1]);
+            ArrayOpr.addVec2(deformMesh.vertices, i, v_delta);
+        }
+    }
+
+    // apply the affine transformation of bones to the vertices
+    public void projectSingleConstraint_Affine(int j){
+        int startidx = lbsData.weightsStart[j];
+        int endidx = startidx + lbsData.weightsCount[j];
+        if (startidx == endidx) {
+            return;
+        }
+        for (int kdx = 0; kdx < 2; kdx++) {
             double[] c = new double[2];
             double[] delta_lambda = new double[2];
             for (int idx = startidx; idx < endidx; idx++) {
@@ -73,20 +102,14 @@ public class LbsConstraint extends BaseConstraint{
                 if(kdx == 0) {
                     c[0] += m * w * v_ref.x() * vc.x();
                     c[1] += m * w * v_ref.x() * vc.y();
-                } else if (kdx == 1) {
+                } else {
                     c[0] += m * w * v_ref.y() * vc.x();
                     c[1] += m * w * v_ref.y() * vc.y();
-                }
-                else {
-                    c[0] += m * w * vc.x();
-                    c[1] += m * w * vc.y();
                 }
             }
 
             for (int k = 0; k <= 1; k++) {
-                delta_lambda[k] = -(c[k] + alpha * lambda[j][kdx*2+k]) / (
-                        c_deriv[j][kdx] + alpha);
-                lambda[j][kdx*2+k] += delta_lambda[k];
+                delta_lambda[k] = -c[k] / (c_deriv[j][kdx] + alpha);
             }
 
             for (int idx = startidx; idx < endidx; idx++) {
@@ -96,20 +119,10 @@ public class LbsConstraint extends BaseConstraint{
                 Vec2 v_ref = ArrayOpr.getVec2(deformMesh.ref_vertices, i);
                 if (kdx == 0){
                     v_delta.add(w * delta_lambda[0] * v_ref.x(), w * delta_lambda[1] * v_ref.x());}
-                else if (kdx==1){
-                    v_delta.add(w * delta_lambda[0] * v_ref.y(), w * delta_lambda[1] * v_ref.y());}
                 else{
-                    v_delta.add(w * delta_lambda[0], w * delta_lambda[1]);
-                }
+                    v_delta.add(w * delta_lambda[0] * v_ref.y(), w * delta_lambda[1] * v_ref.y());}
                 ArrayOpr.addVec2(deformMesh.vertices, i, v_delta);
             }
-
         }
-
     }
-
-
-
-
-
 }

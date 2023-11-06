@@ -1,62 +1,147 @@
 package com.esotericsoftware.spine;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
+import com.esotericsoftware.spine.attachments.MeshAttachment;
 import com.esotericsoftware.spine.pbd.*;
+import com.esotericsoftware.spine.utils.TwoColorPolygonBatch;
 
-public class PbdTest0  extends ApplicationAdapter {
+public class PbdTest0 extends ApplicationAdapter{
+    long startTime;
 
-    ShapeRenderer shapeRenderer;
+    // gdx and spine stuff
     OrthographicCamera camera;
+    TwoColorPolygonBatch batch;
+    SkeletonRenderer renderer;
+    SkeletonRendererDebug debugRenderer;
+    BitmapFont font;
+    SpriteBatch spriteBatch;
+    ShapeRenderer shapeRenderer;
+    TextureAtlas atlas;
+    Skeleton skeleton;
+    AnimationState state;
+    Slot slot;
+    MeshAttachment meshAttachment;
 
+    // data
     MeshData meshData;
+    LbsData lbsData;
+
+    // simulation stuff
     DeformMesh deformMesh;
     PhysicsSceneData sceneData;
     PbdFramework pbdFramework;
 
     @Override
-    public void create () {
-        sceneData = new PhysicsSceneData();
-        sceneData.setGravity(0, -10f);
-        sceneData.setDamping(0.995f);
-
-        shapeRenderer = new ShapeRenderer();
+    public void create (){
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        double[] vertices = {200, 200, 200, 350, 350, 200, 350, 350};
-        short[] indices = {0, 1, 2, 1, 2, 3};
+        batch = new TwoColorPolygonBatch();
+        renderer = new SkeletonRenderer();
+        renderer.setPremultipliedAlpha(true);
+        debugRenderer = new SkeletonRendererDebug();
+        debugRenderer.setBoundingBoxes(true);
+        debugRenderer.setRegionAttachments(true);
 
-        meshData = new MeshData(vertices, indices);
+        atlas = new TextureAtlas(Gdx.files.internal("fish/fish.atlas"));
+        SkeletonJson json = new SkeletonJson(atlas);
+        json.setScale(0.15f);
+        SkeletonData skeletonData = json.readSkeletonData(Gdx.files.internal("fish/fish.json"));
+        skeleton = new Skeleton(skeletonData);
+        skeleton.setPosition(250, 250);
+
+        AnimationStateData stateData = new AnimationStateData(skeletonData); // Defines mixing (crossfading) between animations.
+        stateData.setMix("swing", "swing", 0f);
+        state = new AnimationState(stateData);
+        state.setAnimation(0, "swing", true);
+        state.setTimeScale(1.0f); // Slow all animations down to 50% speed.
+
+        font = new BitmapFont(Gdx.files.internal("fonts/Amble-Regular-26.fnt"), Gdx.files.internal("fonts/Amble-Regular-26.png"), false);
+        spriteBatch = new SpriteBatch();
+        shapeRenderer = new ShapeRenderer();
+
+        slot = skeleton.findSlot("fish");
+        meshAttachment = (MeshAttachment) skeleton.getAttachment("fish", "fish");
+        skeleton.setBonesToSetupPose();
+        skeleton.updateWorldTransform();
+
+        // set up mesh and lbs data
+        short[] indices = meshAttachment.getTriangles();
+        int n_verts = meshAttachment.getWorldVerticesLength()>>1;
+        float[] fWorldVertices = new float[n_verts*2];
+        meshAttachment.computeWorldVertices(slot, 0, n_verts*2, fWorldVertices, 0, 2);
+        double[] worldVertices = ArrayOpr.convertArray(fWorldVertices);
+        meshData = new MeshData(worldVertices, indices);
+
+        // set up pbd framework
+        double damping = 1.0;
+        int solver_iterations = 6;
+
         deformMesh = new DeformMesh(meshData);
+        sceneData = new PhysicsSceneData();
+        sceneData.setGravity(0, -1f);
+        sceneData.setDamping(damping);
+        sceneData.setFps(60, solver_iterations);
         pbdFramework = new PbdFramework(sceneData, deformMesh);
-        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3f, 1e-3f));
+
+        // set up constraints
+        pbdFramework.addConstraint(new DeformConstraint(deformMesh, sceneData, 1e-3, 1e-3), 0);
         pbdFramework.initConstraints();
     }
 
     void PhysicsUpdate(){
         for(int i=0; i< sceneData.iterations; i++) {
             pbdFramework.makePrediction();
-            pbdFramework.preUpdateProject();
-            for(int k=0; k< sceneData.solver_steps; k++){
-                pbdFramework.project();
-            }
+            pbdFramework.project();
             pbdFramework.collisionY(0);
             pbdFramework.updateVelocity();
         }
     }
 
     @Override
-    public void render () {
+    public void render() {
+
+        state.update(Gdx.graphics.getDeltaTime()); // Update the animation time.
+
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        state.apply(skeleton); // Poses skeleton using current animations. This sets the bones' local SRT.
+        skeleton.updateWorldTransform(); // Uses the bones' local SRT to compute their world SRT.
+
         PhysicsUpdate();
-        Gdx.gl.glClear(Gdx.gl.GL_COLOR_BUFFER_BIT);
+
+        // Configure the camera, SpriteBatch, and SkeletonRendererDebug.
         camera.update();
-        shapeRenderer.setProjectionMatrix(camera.combined);
+        batch.getProjectionMatrix().set(camera.combined);
+        debugRenderer.getShapeRenderer().setProjectionMatrix(camera.combined);
+
+        batch.begin();
+        renderer.draw(batch, skeleton); // Draw the skeleton images.
+        batch.end();
+
+        debugRenderer.draw(skeleton); // Draw debug lines.
+
+        // show the world rotation of the bone
+
+        spriteBatch.begin();
+        // debug text
+        font.setColor(Color.WHITE);
+        font.getData().setScale(1.0f);
+        // font.draw(spriteBatch, "1 2 3", 50, 50);
+        spriteBatch.end();
+
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         short[] indices = meshData.getIndices();
         double[] vertices = deformMesh.getVertices();
+        // double[] vertices = deformMesh.getRefVertices();
+        // double[] vertices = lbsData.getRigVerts();
         double scale = meshData.getScale();
         for (int i=0; i<indices.length / 3; i++){
             short i1 = indices[i*3];
@@ -71,14 +156,21 @@ public class PbdTest0  extends ApplicationAdapter {
             shapeRenderer.triangle(x1, y1, x2, y2, x3, y3);
         }
         shapeRenderer.end();
+
     }
 
-    @Override
+    public void resize (int width, int height) {
+        camera.setToOrtho(false); // Update camera with new size.
+    }
+
     public void dispose () {
-        shapeRenderer.dispose();
+        atlas.dispose();
+        font.dispose();
+        batch.dispose();
     }
 
     public static void main (String[] args) throws Exception {
         new Lwjgl3Application(new PbdTest0());
     }
+
 }
