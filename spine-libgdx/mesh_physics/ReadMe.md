@@ -84,25 +84,27 @@ Each bone $j$ contains an affine transformation $\mathbf{A}_j$ and translation $
 
 LBS can be represented as
 
-$$
+```math
 \hat{\mathbf{x}}_i=\sum_j w_{ij}(\mathbf{A}_j^*(\overline{\mathbf{x}}_i - \overline{\mathbf{t}}_j) +\mathbf{t}_j)
-$$
+```
 
-where $w_{ij}$ is the binding weights, and $\mathbf{A}_j^*=\mathbf{A}_j \overline{\mathbf{A}}_j^{(-1)}$ is a relative affine transformation. In reference pose, we have $\mathbf{A}_j^*=\mathbf{I}$ (identity matrix).
+where $w_{ij}$ is the binding weights, and $`\mathbf{A}_j^*=\mathbf{A}_j \overline{\mathbf{A}}_j^{(-1)}`$ is a relative affine transformation. In reference pose, we have $`\mathbf{A}_j^*=\mathbf{I}`$ (identity matrix).
 
 `pbd.LbsData.inverseMixed`: Suppose we know $\mathbf{x}$ and current bone translation $\mathbf{t}_j$. We want to find the best fit affine transformation $\mathbf{A}_j$ to minimize the loss function
 
-$$\sum_i ||\mathbf{x}_i - \hat{\mathbf{x}}_i||$$.
+```math
+\sum_i ||\mathbf{x}_i - \hat{\mathbf{x}}_i||.
+```
 
 By differentiating the loss function wrp. $\mathbf{A}^*_{j}$, we have
 
-$$
+```math
 \begin{align*}
   \mathbf{P} &= \sum_i  (\mathbf{x}_i-\mathbf{t}_j)(\overline{\mathbf{x}}_i-\overline{\mathbf{t}}_j)^T\\
   \mathbf{Q} &= \sum_i  (\overline{\mathbf{x}}_i-\overline{\mathbf{t}}_j)(\overline{\mathbf{x}}_i-\overline{\mathbf{t}}_j)^T\\
   \mathbf{A}^*_{j} &= \mathbf{P}\mathbf{Q}^{-1}
 \end{align*}
-$$
+```
 
 And get $\mathbf{A}_j = \mathbf{A}^*_j \overline{\mathbf{A}}_j$.
 
@@ -118,11 +120,11 @@ Briefly explaining, we start with the positions in current time step $\mathbf{x}
 
 The workflow is very simple:
 
-1. [Generate prediction](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/cons/framework.py#L25C1-L31C80): $\mathbf{p}_i = \mathbf{x}^k_i + \mathbf{v}_i^k dt + \mathbf{f}_{ext}dt^2$ 
+1. [Generate prediction](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/cons/framework.py#L25C1-L31C80): $`\mathbf{p}_i = \mathbf{x}^k_i + \mathbf{v}_i^k dt + \mathbf{f}_{ext}dt^2`$ 
 2. Constraints projection: Iterate through all constraints $C$, project the constraints to modify $\mathbf{p}_i$
-3. [Update velocity](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/cons/framework.py#L33C1-L38C68): Finish this time step, update velocity $\mathbf{v}_i^{k+1} = k_{damp}\frac{\mathbf{p}_i - \mathbf{x}^k_i}{dt}$.
+3. [Update velocity](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/cons/framework.py#L33C1-L38C68): Finish this time step, update velocity $`\mathbf{v}_i^{k+1} = k_{damp}\frac{\mathbf{p}_i - \mathbf{x}^k_i}{dt}`$.
    
-$k_{damp}\in [0, 1]$ is a simple damping parameter. $k_{damp}=1$ means no damping.
+$k_{damp}\in [0, 1]$ is a simple damping parameter. $`k_{damp}=1`$ means no damping.
 
 The [python code](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4b8e516d08417bfde65a55/test/fish_deform.py#L67C1-L71C22) is
 
@@ -138,20 +140,20 @@ The [python code](https://github.com/yoharol/PBD_Taichi/blob/3b4d3f8f69efcbff7b4
 
 All the physics in PBD is represented by a set of scalar functions $C_j$. For example, if two vertices $\mathbf{p}_1$ and $\mathbf{p}_2$ is connected by a mass spring with rest length $l_{12}$, then we have a constraint
 
-$$
+```math
 C_{12} = ||\mathbf{p}_1-\mathbf{p}_2||-l_{12}.
-$$
+```
 
 Constraints projection means we want to solve $C=0$ for all constraints. 
 
 Suppose there are many springs connecting the vertices, then we have one constraint for each spring $C_{12}, C_{13}, C_{23}, \dots$. Constraint projection is to iterate through all constraints, and modify the positions
 
-$$
+```math
 \begin{align}
     \Delta \mathbf{x}_{i} &= m_i^{-1} \nabla_{\mathbf{x}_i} C^T(\mathbf{x})\Delta \lambda\\
     \Delta \lambda &= - \frac{C(\mathbf{x})}{\sum_i m_i^{-1} ||\nabla_{\mathbf{x}_i} C(\mathbf{x})||^2+\tilde{\alpha}}
 \end{align}
-$$
+```
 
 where $\tilde{\alpha} = \frac{\alpha}{dt^2}$. $\alpha$ is an inverse stiffness parameter. The smaller $\alpha$ is, the more stiff the constraint is. For example, $\alpha=1.0$ means the spring is very stretchable. $\alpha=10^{-3}$ means the spring is stiff. $\alpha=0$ means the spring cannot be stretched at all.
 
