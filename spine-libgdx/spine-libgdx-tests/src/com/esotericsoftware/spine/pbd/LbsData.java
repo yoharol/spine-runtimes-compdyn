@@ -20,8 +20,8 @@ public class LbsData {
 
     Bone[] boneObjs;
 
-    Mat2x2[] boneMats;
-    Vec2[] bonePos_ref;
+    Mat2x2[] boneMatsRef;
+    Vec2[] bonePosRef;
     double[] rigVertices;
     float[] rigVerticesFloats;
 
@@ -38,8 +38,8 @@ public class LbsData {
             this.boneObjs[i] = boneObjs.get(i);
         }
         int n_bones = boneObjs.size;
-        boneMats = new Mat2x2[boneObjs.size];
-        bonePos_ref = new Vec2[boneObjs.size];
+        boneMatsRef = new Mat2x2[boneObjs.size];
+        bonePosRef = new Vec2[boneObjs.size];
         updateBoneStates();
 
         for(int i=0; i<boneObjs.size; i++){
@@ -88,8 +88,8 @@ public class LbsData {
 
         for(int i=0; i<n_bones; i++){
             // print bone data and weights data
-            System.out.println("Bone " + i + ": " + boneObjs.get(i).getData().getName());
-            System.out.println(weightsStart[i] + " " + weightsCount[i]);
+            System.out.println("[pbd.LbsData.LbsData] " + "Bone " + i + ": " + boneObjs.get(i).getData().getName());
+            System.out.println("[pbd.LbsData.LbsData] " + weightsStart[i] + " " + weightsCount[i]);
         }
 
     }
@@ -98,9 +98,9 @@ public class LbsData {
     public void updateBoneStates(){
         for(int i=0; i<boneObjs.length; i++){
             Bone bone = boneObjs[i];
-            boneMats[i] = new Mat2x2(bone.getA(), bone.getB(), bone.getC(), bone.getD());
-            bonePos_ref[i] = new Vec2(bone.getWorldX(), bone.getWorldY());
-            bonePos_ref[i].div(deformMesh.getScale());
+            boneMatsRef[i] = new Mat2x2(bone.getA(), bone.getB(), bone.getC(), bone.getD());
+            bonePosRef[i] = new Vec2(bone.getWorldX(), bone.getWorldY());
+            bonePosRef[i].div(deformMesh.getScale());
         }
     }
 
@@ -141,10 +141,10 @@ public class LbsData {
             double w = weights[idx];
             double x_bone = boneObjs[j].getWorldX() / deformMesh.getScale();
             double y_bone = boneObjs[j].getWorldY() / deformMesh.getScale();
-            double x_bone_ref = bonePos_ref[j].x();
-            double y_bone_ref = bonePos_ref[j].y();
-            double x_ref = deformMesh.ref_vertices[i*2] - x_bone_ref;
-            double y_ref = deformMesh.ref_vertices[i*2+1] - y_bone_ref;
+            double x_bone_ref = bonePosRef[j].x();
+            double y_bone_ref = bonePosRef[j].y();
+            double x_ref = deformMesh.refVertices[i*2] - x_bone_ref;
+            double y_ref = deformMesh.refVertices[i*2+1] - y_bone_ref;
             double x = deformMesh.vertices[i*2] - x_bone;
             double y = deformMesh.vertices[i*2+1] - y_bone;
             Mat2x2 D = new Mat2x2(x*x_ref, x*y_ref, y*x_ref, y*y_ref);
@@ -164,7 +164,7 @@ public class LbsData {
         Q.mul(blend);
         P.mul(1-blend);
         P.add(Q);
-        P.dot(boneMats[j]);
+        P.dot(boneMatsRef[j]);
         return P;
     }
 

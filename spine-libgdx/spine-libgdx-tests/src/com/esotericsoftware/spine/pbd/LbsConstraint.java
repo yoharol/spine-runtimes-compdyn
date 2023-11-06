@@ -28,7 +28,7 @@ public class LbsConstraint extends BaseConstraint{
                 int i=lbsData.weightsIndex[k];
                 double w = lbsData.weights[k];
                 double m = deformMesh.vertMass[i];
-                Vec2 v_ref= ArrayOpr.getVec2(deformMesh.ref_vertices, i);
+                Vec2 v_ref= ArrayOpr.getVec2(deformMesh.refVertices, i);
                 c_deriv[j][0] += m * w * w * v_ref.x() * v_ref.x();
                 c_deriv[j][1] += m * w * w * v_ref.y() * v_ref.y();
                 c_deriv[j][2] += m * w * w;
@@ -98,7 +98,7 @@ public class LbsConstraint extends BaseConstraint{
                 double m = deformMesh.vertMass[i];
                 Vec2 vc = ArrayOpr.getVec2(deformMesh.vertices, i);
                 vc.sub(ArrayOpr.getVec2(lbsData.rigVertices, i));
-                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.ref_vertices, i);
+                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.refVertices, i);
                 if(kdx == 0) {
                     c[0] += m * w * v_ref.x() * vc.x();
                     c[1] += m * w * v_ref.x() * vc.y();
@@ -116,7 +116,7 @@ public class LbsConstraint extends BaseConstraint{
                 int i = lbsData.weightsIndex[idx];
                 double w = lbsData.weights[idx];
                 Vec2 v_delta = new Vec2(0.0, 0.0);
-                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.ref_vertices, i);
+                Vec2 v_ref = ArrayOpr.getVec2(deformMesh.refVertices, i);
                 if (kdx == 0){
                     v_delta.add(w * delta_lambda[0] * v_ref.x(), w * delta_lambda[1] * v_ref.x());}
                 else{

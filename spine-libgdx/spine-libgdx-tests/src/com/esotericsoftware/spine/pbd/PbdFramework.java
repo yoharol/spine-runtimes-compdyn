@@ -17,7 +17,7 @@ public class PbdFramework {
     public PbdFramework(PhysicsSceneData sceneData, DeformMesh deformMesh){
         this.sceneData = sceneData;
         vertices = deformMesh.vertices;
-        ref_vertices = deformMesh.ref_vertices;
+        ref_vertices = deformMesh.refVertices;
         velocities = new double[vertices.length];
         vertices_cache = new double[vertices.length];
         n_verts = deformMesh.n_verts;

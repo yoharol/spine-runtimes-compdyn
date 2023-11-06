@@ -27,6 +27,7 @@ public class MeshData {
             max_x = Math.max(max_x, vertices[i*2]);
             max_y = Math.max(max_y, vertices[i*2+1]);
         }
+        // Rescale the vertices to [0, 1]
         scale = Math.max(max_x - min_x, max_y - min_y);
         for(int i=0; i<n_verts*2;i++){
             vertices[i] /= scale;
